@@ -11,24 +11,17 @@ sendiri, port dan kredensial terpisah) — tidak lagi bergantung pada repositori
 
 ## 0. Identitas & Kontribusi Tim
 
-| | |
 |---|---|
 | Kode kasus | A04-W — Pengolahan Berkas, pola Work Queue |
 | Pelatihan | PJJ Implementasi dan Pengelolaan Message Broker untuk Arsitektur Microservices — BPPK Kemenkeu, 14–25 September 2026 |
-| Nama | [ISI NAMA] |
-| NIP | [ISI NIP] |
-| Unit kerja | [ISI UNIT KERJA] |
 
 **Anggota kelompok & pembagian kontribusi:**
 
 | Nama | NIP | Kontribusi |
 |---|---|---|
-| [ISI NAMA ANGGOTA 1] | [ISI NIP] | [ISI PEMBAGIAN TUGAS, mis. producer & kontrak event] |
-| [ISI NAMA ANGGOTA 2] | [ISI NIP] | [ISI PEMBAGIAN TUGAS, mis. consumer & idempotensi] |
-| [ISI NAMA ANGGOTA 3] | [ISI NIP] | [ISI PEMBAGIAN TUGAS, mis. pengujian U1–U4 & bukti] |
-| [ISI NAMA ANGGOTA 4] | [ISI NIP] | [ISI PEMBAGIAN TUGAS, mis. laporan & presentasi] |
+| Laeila Mardhatilla | 198906262024212004 | Topologi broker, Pengujian U1–U4, serta penulisan laporan dan bahan presentasi |
+| Dhiya Nida Ulayya | 199606062024212003 | Topologi broker, kode producer/worker termasuk idempotensi di sisi worker, skema database |
 
-> Baris di atas masih placeholder — lengkapi sebelum dikumpulkan.
 
 ## 1. Ringkasan kasus
 
@@ -156,8 +149,7 @@ tujuan. Dua lapis pembuktian dipakai di sini:
 - Payload tidak valid — termasuk `file_id` yang **tidak terdaftar** di fixture
   lokal — dicatat ke `file_rejections`, lalu `nack(msg, false, false)`
   (requeue **false**) sehingga broker mem-buang pesan ke DLX `files.penolakan`
-  — jalur penolakan yang terdokumentasi di broker maupun di database, tanpa
-  menyentuh tabel efek bisnis.
+  — jalur penolakan yang terdokumentasi di broker maupun di database, tanpa menyentuh tabel efek bisnis.
 - Kegagalan tak terduga (mis. PostgreSQL putus) → pesan **tidak** di-ack/nack;
   worker menutup koneksi dan berhenti. Pesan tetap unacked di broker dan akan
   dikirim ulang ke consumer berikutnya begitu koneksi lama ditutup broker.

@@ -8,9 +8,12 @@
 //
 // Perintah:
 //   siapkan                                   deklarasikan topologi lalu keluar
-//   kirim   --run <run> --ids <A01-A20>        kirim N event valid (contoh: N01-N20)
-//   ulang   --run <run> --ids <A01-A05>        kirim ULANG event_id+payload PERSIS semula
-//   invalid --run <run> --id <X01>             kirim satu event dengan file_id tidak terdaftar
+//   kirim    --run <run> --ids <A01-A20>       kirim N event valid (contoh: N01-N20)
+//   ulang    --run <run> --ids <A01-A05>       kirim ULANG event_id+payload PERSIS semula
+//   invalid  --run <run> --id <X01>            kirim satu event dengan file_id tidak terdaftar
+//   salahrute --run <run> --id <Z01>           kirim satu event VALID dengan routing key SALAH
+//                                              (tidak cocok binding apa pun -- membuktikan
+//                                              alternate-exchange files.tanpa_rute menangkapnya)
 'use strict';
 const { writeFileSync, readFileSync, existsSync, mkdirSync } = require('node:fs');
 const path = require('node:path');
@@ -83,12 +86,12 @@ function buatEventTidakValid(run, id, waktu) {
   };
 }
 
-async function kirimSemua(events) {
+async function kirimSemua(events, routingKey = ROUTING_KEY) {
   const p = await openPublisher(declareTopology);
   try {
     for (const event of events) {
-      await p.publish(event, ROUTING_KEY);
-      console.log(JSON.stringify({ terkirim: event.event_id, job_id: event.payload.job_id, occurred_at: event.occurred_at }));
+      await p.publish(event, routingKey);
+      console.log(JSON.stringify({ terkirim: event.event_id, job_id: event.payload.job_id, occurred_at: event.occurred_at, routingKey }));
     }
   } finally { await p.close(); }
 }
@@ -147,7 +150,19 @@ async function main() {
     return;
   }
 
-  throw new Error('Gunakan: siapkan | kirim --run <run> --ids <A01-A20> | ulang --run <run> --ids <A01-A05> | invalid --run <run> --id <X01>');
+  if (perintah === 'salahrute') {
+    // Payload SAH (lolos validateEvent()) -- yang sengaja salah hanya routing
+    // key publish-nya, supaya pesan ini murni menguji jalur alternate-exchange
+    // (files.tanpa_rute), bukan tercampur dengan jalur penolakan kontrak (U4).
+    const run = opsi.run; const id = opsi.id || 'Z01';
+    if (!run) throw new Error('--run wajib diisi');
+    const event = buatEventValid(run, id, opsi.waktu);
+    await kirimSemua([event], 'file.proses'); // typo sengaja: tidak cocok binding files->filejobs (rk=file.process)
+    console.log(JSON.stringify({ run, dikirimSalahRute: event.event_id, routingKeyDipakai: 'file.proses' }));
+    return;
+  }
+
+  throw new Error('Gunakan: siapkan | kirim --run <run> --ids <A01-A20> | ulang --run <run> --ids <A01-A05> | invalid --run <run> --id <X01> | salahrute --run <run> --id <Z01>');
 }
 
 if (require.main === module) main().catch(e => { console.error(e.message); process.exitCode = 1; });
