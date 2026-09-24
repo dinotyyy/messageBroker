@@ -8,6 +8,11 @@ Identitas & pembagian kontribusi tim: [README §0](../README.md#0-identitas--kon
 Bukti mentah lengkap (lampiran terpisah, tidak diulang di laporan ini):
 [`../bukti/`](../bukti/). Diagram satu halaman: [`../diagram/topologi.svg`](../diagram/topologi.svg).
 
+> **Branch `setup-awal`.** Checkpoint ini merekam kondisi proyek setelah
+> desain & implementasi (topologi, kontrak event, producer/consumer) selesai
+> tapi **sebelum** skenario uji U1–U4 dijalankan — folder `bukti/` masih
+> kosong. Untuk laporan dengan hasil pengujian sungguhan, lihat branch `main`.
+
 ---
 
 ## 1. Identifikasi Masalah, Ruang Lingkup, & Kriteria Keberhasilan
@@ -106,97 +111,43 @@ pemulihan consumer.
 
 ## 5. Bukti Hasil Pengujian (Evidence Matrix)
 
-Run: **`run01`**. Dijalankan 23 September 2026 pada infrastruktur mandiri
-proyek ini, worker tunggal (`A04_WORKER_ID` otomatis dari PID). Cara
-menghitung hasil (kenapa 20→25→25→26, dan bedanya dengan pola P) dijelaskan
-di [README §9](../README.md#9-cara-menghitung-hasil). Kebijakan bukti
-(batas tunggu 60 detik, apa yang direkam) ada di
-[README §10](../README.md#10-bukti-yang-dicatat). File bukti mentah (JSON,
-keluaran `uji/skenario.js verifikasi`/`ledger`, log worker) ada di
-[`../bukti/`](../bukti/).
+**Status pada checkpoint ini: belum dilaksanakan.** Topologi, kontrak event,
+dan kode producer/consumer sudah siap dan bisa dijalankan (lihat §2–§4), tapi
+skenario uji U1–U4 belum dieksekusi pada branch ini — folder
+[`../bukti/`](../bukti/) masih kosong. Rencana skenario dan cara
+menjalankannya ada di [README §6](../README.md#6-skenario-uji-u1u4); cara
+menghitung hasil (kenapa nanti akan jadi 20→25→25→26, dan bedanya dengan
+pola P) dijelaskan di [README §9](../README.md#9-cara-menghitung-hasil).
+Kebijakan bukti (batas tunggu 60 detik, apa yang direkam) ada di
+[README §10](../README.md#10-bukti-yang-dicatat). Tabel di bawah ini akan
+diisi kolom "Hasil Aktual"/"Waktu tunggu"/"Bukti"/"Status" setelah pengujian
+sungguhan dijalankan (lihat branch `main` untuk hasil yang sudah diuji).
 
-| Uji | Langkah | Hasil yang Diharapkan | Hasil Aktual | Waktu tunggu (batas 60s) | Bukti | Status |
-|---|---|---|---|---|---|---|
-| **U1** | Kirim 20 event valid `run01-N01`..`run01-N20` (`file_id` dirotasi `sample-a`/`sample-b`/`sample-c`) | 20 hasil unik, himpunan ID input = output | 20 baris baru di `file_results`; `idHasilBisnis` cocok persis 20 ID yang dikirim; `ukuran_bytes`/`jumlah_kata` sesuai fixture (61/10, 212/29, 43/5) | 142 ms | `bukti/run01-u1.json` | **LULUS** |
-| **U2** | Setelah U1, worker dihentikan paksa (`taskkill //F`, mensimulasikan crash proses); kirim 5 event baru `G01`–`G05` | 5 pesan menunggu di queue; setelah worker pulih, ke-5 ID selesai tanpa kirim ulang manual | Snapshot saat worker mati: `ready=5, unacked=0, consumers=0` (`bukti/run01-u2-antrean-tertahan.json`). Setelah worker dinyalakan kembali: kelima `G01`–`G05` otomatis diproses (log `"hasil":"baru"`), total hasil bisnis run naik dari 20 → **25** | 221 ms | `bukti/run01-u2-antrean-tertahan.json`, `bukti/run01-u2.json` | **LULUS** |
-| **U3** | Kirim ulang `run01-N01`..`run01-N05` dengan `event_id` + payload **persis semula** (`occurred_at` sama dengan pengiriman U1) | Efek bisnis tidak bertambah; jumlah hasil tetap 25 | Log worker: kelima event bertanda `"hasil":"duplikat-diabaikan"`. Jumlah baris tetap **25** (sebelum 25, sesudah 25) | 176 ms | `bukti/run01-u3.json` | **LULUS** |
-| **U4** | Kirim `run01-X01` (payload `file_id: "sample-tidak-terdaftar"`, tidak valid), lalu `run01-V01` (valid) | `X01` masuk jalur penolakan terdokumentasi tanpa efek bisnis; `V01` selesai, tidak tertahan | `X01` tercatat di `file_rejections` (alasan: *"payload.file_id ... tidak terdaftar di fixture lokal"*) dan `files.penolakan.q` (`ready=1` via dead-letter); **tidak ada** baris `run01-X01` di `file_results`. `V01` selesai (`"hasil":"baru"`) segera setelah `X01` ditolak — total hasil bisnis run naik 25 → **26** | 133 ms | `bukti/run01-u4.json` | **LULUS** |
+| Uji | Langkah yang direncanakan | Hasil yang Diharapkan | Status |
+|---|---|---|---|
+| **U1** | Kirim 20 event valid `run01-N01`..`run01-N20` (`file_id` dirotasi `sample-a`/`sample-b`/`sample-c`) | 20 hasil unik, himpunan ID input = output | Belum dijalankan |
+| **U2** | Setelah U1, worker dihentikan paksa (mensimulasikan crash proses); kirim 5 event baru `G01`–`G05` | 5 pesan menunggu di queue; setelah worker pulih, ke-5 ID selesai tanpa kirim ulang manual | Belum dijalankan |
+| **U3** | Kirim ulang `run01-N01`..`run01-N05` dengan `event_id` + payload **persis semula** | Efek bisnis tidak bertambah; jumlah hasil tetap 25 | Belum dijalankan |
+| **U4** | Kirim `run01-X01` (payload `file_id: "sample-tidak-terdaftar"`, tidak valid), lalu `run01-V01` (valid) | `X01` masuk jalur penolakan terdokumentasi tanpa efek bisnis; `V01` selesai, tidak tertahan | Belum dijalankan |
 
-Kolom "Waktu tunggu" adalah `waktuTungguMs` aktual dari polling
-`verifikasi` (lihat README §10) — jauh di bawah batas 60 detik pada keempat
-uji, sehingga tidak ada kasus `tercapaiDalamWaktu: false` yang perlu dicatat.
-
-**Ringkasan akhir run01:** 26 baris efek bisnis (20 + 5 + 0 dari replay + 1
-dari `V01`), 1 baris penolakan (`X01`), 0 pesan tak ter-route sepanjang
-pengujian (`files.tanpa_rute.q` selalu 0) — membuktikan seluruh publish
-selama U1–U4 ter-route ke queue tujuan yang benar. Ekspor mentah seluruh 26
-baris ledger + 1 baris penolakan (bukan ringkasan), lengkap dengan `job_id`,
-`file_id`, `ukuran_bytes`, dan `jumlah_kata` per baris, ada di
-`bukti/run01-ledger.json` — sehingga hitungan di atas bisa dibuktikan ulang
-oleh pengajar, bukan sekadar diklaim. Verifikasi silang: `job_id` pada
-seluruh 26 baris **berbeda satu sama lain** (`JOB-N01`..`JOB-V01`), sementara
-`file_id` `sample-a`/`sample-b`/`sample-c` masing-masing dipakai berulang
-oleh banyak `job_id` — membuktikan kriteria "berkas yang sama boleh dipakai
-beberapa job, dedup berbasis `event_id`" (README §9).
+Setelah dijalankan, ringkasan akhir yang diharapkan: 26 baris efek bisnis
+(20 + 5 + 0 dari replay + 1 dari `V01`), 1 baris penolakan (`X01`), 0 pesan
+tak ter-route sepanjang pengujian (`files.tanpa_rute.q` tetap 0). Ekspor
+mentah ledger + bukti tiap uji akan disimpan ke `bukti/run01-*.json` supaya
+hitungan bisa dibuktikan ulang, bukan sekadar diklaim.
 
 ---
 
 ## 6. Laporan Investigasi Troubleshooting
 
-**Gejala masalah.** Pada percobaan pertama skenario U2, worker dihentikan
-lewat `kill -SIGINT <PID>` dari shell Git Bash (MSYS) sebelum mengirim 5
-event baru `G01`–`G05`. Snapshot queue sesaat sesudahnya menunjukkan
-`ready:0, consumers:1` — bukan `ready:5, consumers:0` seperti yang
-diharapkan bila worker benar-benar mati. Log worker kemudian mengonfirmasi
-kelima event **sudah diproses** (`"hasil":"baru"`) meski perintah stop sudah
-dijalankan sebelum event dikirim.
-
-**Dua hipotesis penyebab.**
-1. **Sinyal SIGINT tidak pernah sampai ke worker** — proses Node.js pada
-   Windows yang dijalankan lewat `npm run worker &` di dalam sesi Git Bash
-   mungkin tidak menerima `SIGINT` yang dikirim `kill` dari shell MSYS lain,
-   karena Windows tidak memiliki sinyal POSIX asli (`kill` MSYS hanya
-   mengonversi ke `CTRL_C_EVENT` bila proses berada di console yang sama).
-2. **PID yang di-*kill* salah** — PID yang dipakai berasal dari kolom
-   `WINPID` hasil `ps aux` MSYS, yang bisa tidak sinkron dengan PID
-   sesungguhnya dari proses `node.exe` yang terlihat oleh Windows.
-
-**Langkah pembuktian.** Kedua hipotesis dibedakan dengan memeriksa proses
-`node.exe` lewat `tasklist` (alat Windows native, bukan `ps` MSYS) segera
-setelah perintah stop dijalankan, dan membandingkan PID itu dengan `workerId`
-yang tercetak di log worker (`pekerja-<PID>`):
-- Bila hipotesis 2 benar, `tasklist` akan menunjukkan `node.exe` **masih
-  berjalan** dengan PID yang **berbeda** dari PID yang dipakai pada perintah
-  `kill`.
-- Bila hipotesis 1 benar (PID sudah benar tapi sinyal tidak sampai),
-  `tasklist` tetap menunjukkan proses yang sama masih hidup walau PID-nya
-  cocok dengan yang dikirimi `kill -SIGINT`.
-
-Hasil: `tasklist //FI "IMAGENAME eq node.exe"` menunjukkan `node.exe` dengan
-PID **17836** (cocok dengan `workerId: "pekerja-17836"` di log) masih
-berjalan, sedangkan PID yang dipakai pada perintah `kill -SIGINT` sebelumnya
-adalah **27860** (dari kolom `WINPID` `ps aux`, ternyata tidak sinkron).
-Ini mengonfirmasi **hipotesis 2** (PID salah) sebagai penyebab utama —
-dan sekaligus mengonfirmasi keterbatasan `kill -SIGINT` lintas MSYS/Windows
-dari hipotesis 1 tetap relevan sebagai alasan untuk tidak mengandalkan
-`SIGINT` sama sekali pada platform ini.
-
-**Solusi yang diterapkan.** Penghentian worker untuk pengujian U2 diganti
-memakai `tasklist //FI "IMAGENAME eq node.exe"` untuk mendapatkan PID
-Windows yang benar (dicocokkan dengan `workerId` di log), lalu
-`taskkill //F //PID <pid>` untuk mematikan proses secara paksa — pendekatan
-yang juga sekaligus lebih representatif untuk skenario "worker crash" yang
-ingin dibuktikan U2 (mati mendadak, bukan graceful shutdown). Lima baris
-`file_results` yang terlanjur tercatat dari percobaan pertama (`run01-G01`..
-`run01-G05`) dihapus (`DELETE ... WHERE event_id IN (...)`, ditargetkan
-hanya ke 5 baris tersebut) sebelum U2 diulang dari kondisi bersih.
-
-**Hasil akhir pasca perbaikan.** Snapshot U2 (`bukti/run01-u2-antrean-tertahan.json`)
-menunjukkan `ready:5, unacked:0, consumers:0` secara akurat, dan
-`npm run uji -- verifikasi run01 u2 25` mengonfirmasi seluruh 5 pesan
-diproses tuntas setelah worker dipulihkan — sistem berfungsi normal sesuai
-desain; masalah sepenuhnya ada pada cara menghentikan proses worker di
-platform Windows/Git Bash, bukan pada topologi atau kode consumer/producer.
+**Status pada checkpoint ini: belum ada insiden tercatat.** Pengujian U1–U4
+belum dijalankan pada branch ini (lihat §5), sehingga belum ada gangguan
+nyata yang bisa diinvestigasi. Bagian ini akan diisi mengikuti struktur
+gejala → hipotesis → pembuktian → solusi → verifikasi pemulihan begitu
+skenario U2 (worker dihentikan paksa lalu dipulihkan, lihat
+[README §6](../README.md#6-skenario-uji-u1u4)) dijalankan dan ada temuan
+yang perlu didokumentasikan — lihat branch `main` untuk laporan investigasi
+yang sudah diisi dari pengujian sungguhan.
 
 ---
 
@@ -242,6 +193,6 @@ mandiri adalah pengembangan baru untuk kasus A04.
 |---|---|---|
 | Senin, 21 September | Rumusan masalah, diagram topologi, kontrak event | Selesai (bagian 1–2 di atas) |
 | Selasa, 22 September | Implementasi dasar producer, exchange, queue, consumer aktif | Selesai — proyek dipisah menjadi folder mandiri |
-| **Rabu, 23 September** | **Routing lengkap + bukti pengujian** | **Selesai — kontrak & topologi disesuaikan ke spesifikasi job/file_id/operation, U1–U4 dijalankan ulang penuh dan lulus (bagian 5), termasuk satu insiden operasional yang terdokumentasi (bagian 6)** |
-| Kamis, 24 September | Pengujian failure/recovery + laporan | Draft laporan ini disusun; perlu direview ulang & dilengkapi refleksi tim sebelum dikumpulkan |
+| Rabu, 23 September | Routing lengkap + bukti pengujian | Kontrak & topologi sudah disesuaikan ke spesifikasi job/file_id/operation (kode siap dijalankan); **U1–U4 belum dijalankan pada branch ini** — lihat bagian 5 |
+| Kamis, 24 September | Pengujian failure/recovery + laporan | Belum dimulai pada branch ini — menunggu eksekusi skenario uji (lihat branch `main`) |
 | Jumat, 25 September | Presentasi & sesi feedback | Menunggu jadwal sesi sinkron; lihat `../presentasi/` |
