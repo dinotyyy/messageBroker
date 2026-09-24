@@ -1,0 +1,20 @@
+{
+  "name": "a04-w-pengolahan-berkas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Proyek Action Learning - Kasus A04 (Pengolahan Berkas, pola Work Queue). RabbitMQ + PostgreSQL, berdiri sendiri (tidak bergantung pada repo simpel-lab).",
+  "scripts": {
+    "db:siapkan": "node --env-file=.env tools/siapkan-db.js",
+    "topologi:siapkan": "node --env-file=.env src/produsen.js siapkan",
+    "produsen": "node --env-file=.env src/produsen.js",
+    "worker": "node --env-file=.env src/pekerja.js",
+    "uji": "node --env-file=.env uji/skenario.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.9",
+    "pg": "^8.23.0"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}

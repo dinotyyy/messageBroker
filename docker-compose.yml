@@ -1,0 +1,48 @@
+# Infrastruktur mandiri proyek A04-W: RabbitMQ + PostgreSQL saja (tidak perlu
+# Prometheus/Grafana untuk deliverable ini). Nama container, volume, dan port
+# sengaja berbeda dari simpel-lab supaya kedua stack bisa hidup berdampingan.
+
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: a04-rabbitmq
+    hostname: a04-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-a04}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-a04pengolahan}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    ports:
+      - "${RABBITMQ_PORT:-5682}:5672"
+      - "${RABBITMQ_UI_PORT:-15682}:15672"
+    volumes:
+      - ./infra/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+      - a04-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "gosu", "rabbitmq", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: a04-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-a04}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-a04pengolahan}
+      POSTGRES_DB: ${POSTGRES_DB:-a04}
+    ports:
+      - "${POSTGRES_PORT:-5442}:5432"
+    volumes:
+      # Skrip di folder ini dijalankan otomatis oleh Postgres saat volume baru dibuat.
+      - ./db:/docker-entrypoint-initdb.d:ro
+      - a04-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-a04} -d ${POSTGRES_DB:-a04}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  a04-rabbitmq-data:
+  a04-postgres-data:

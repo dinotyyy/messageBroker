@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="1400" height="800" fill="#ffffff"/>
+  <text x="700" y="36" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">A04-W — Pengolahan Berkas: Topologi, Routing, dan Alur Acknowledgment</text>
+  <text x="700" y="58" text-anchor="middle" font-size="13" fill="#6b7280">Pola Work Queue, satu worker aktif — event_id sebagai kunci idempotensi, job_id sebagai label bisnis</text>
+
+  <!-- Producer -->
+  <rect x="30" y="120" width="170" height="70" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="115" y="148" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Producer (CLI)</text>
+  <text x="115" y="168" text-anchor="middle" font-size="12" fill="#1e3a8a">src/produsen.js</text>
+
+  <!-- Exchange utama -->
+  <rect x="270" y="120" width="200" height="70" rx="8" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="370" y="145" text-anchor="middle" font-size="14" font-weight="600" fill="#713f12">Exchange: files</text>
+  <text x="370" y="163" text-anchor="middle" font-size="12" fill="#713f12">type: direct, durable</text>
+  <text x="370" y="180" text-anchor="middle" font-size="11" fill="#713f12">rk: file.process</text>
+
+  <!-- Queue kerja -->
+  <rect x="540" y="120" width="200" height="70" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="640" y="145" text-anchor="middle" font-size="14" font-weight="600" fill="#14532d">Queue: filejobs</text>
+  <text x="640" y="163" text-anchor="middle" font-size="12" fill="#14532d">durable, persistent, prefetch=1</text>
+  <text x="640" y="180" text-anchor="middle" font-size="11" fill="#14532d">DLX -&gt; files.penolakan</text>
+
+  <!-- Worker -->
+  <rect x="810" y="120" width="190" height="70" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="905" y="145" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Worker (consumer)</text>
+  <text x="905" y="163" text-anchor="middle" font-size="12" fill="#1e3a8a">src/pekerja.js</text>
+  <text x="905" y="180" text-anchor="middle" font-size="11" fill="#1e3a8a">baca fixtures/ via file_id</text>
+
+  <!-- PostgreSQL -->
+  <rect x="1070" y="120" width="300" height="70" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="1220" y="145" text-anchor="middle" font-size="14" font-weight="600" fill="#4c1d95">PostgreSQL</text>
+  <text x="1220" y="163" text-anchor="middle" font-size="12" fill="#4c1d95">file_results (event_id PK)</text>
+  <text x="1220" y="180" text-anchor="middle" font-size="11" fill="#4c1d95">= ledger/receipt efek bisnis</text>
+
+  <!-- Arrows main flow -->
+  <g stroke="#374151" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M200,155 H270"/>
+    <path d="M470,155 H540"/>
+    <path d="M740,155 H810"/>
+    <path d="M1000,155 H1070"/>
+  </g>
+  <text x="235" y="145" text-anchor="middle" font-size="11" fill="#374151">publish confirm</text>
+  <text x="505" y="145" text-anchor="middle" font-size="11" fill="#374151">bind rk=file.process</text>
+  <text x="775" y="145" text-anchor="middle" font-size="11" fill="#374151">consume</text>
+  <text x="1035" y="145" text-anchor="middle" font-size="11" fill="#374151">INSERT ... ON CONFLICT</text>
+
+  <!-- ACK arrow (feedback) -->
+  <path d="M905,190 C905,230 640,230 640,190" stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <text x="775" y="250" text-anchor="middle" font-size="12" font-weight="600" fill="#16a34a">ack HANYA setelah INSERT sukses (baris baru atau duplikat)</text>
+
+  <!-- Alternate exchange path -->
+  <rect x="270" y="330" width="200" height="60" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="370" y="353" text-anchor="middle" font-size="13" font-weight="600" fill="#7f1d1d">Exchange: files.tanpa_rute</text>
+  <text x="370" y="370" text-anchor="middle" font-size="11" fill="#7f1d1d">fanout — alternate-exchange</text>
+  <rect x="540" y="330" width="200" height="60" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="640" y="353" text-anchor="middle" font-size="13" font-weight="600" fill="#7f1d1d">Queue: files.tanpa_rute.q</text>
+  <text x="640" y="370" text-anchor="middle" font-size="11" fill="#7f1d1d">bukti pesan tak ter-route (harus 0)</text>
+  <path d="M370,190 V330" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,4" fill="none" marker-end="url(#arrowRed)"/>
+  <path d="M470,360 H540" stroke="#dc2626" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="330" y="270" font-size="11" fill="#7f1d1d">jika gagal cocok binding apa pun</text>
+
+  <!-- Rejection / DLQ path -->
+  <rect x="810" y="330" width="190" height="60" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="905" y="353" text-anchor="middle" font-size="13" font-weight="600" fill="#7f1d1d">Exchange: files.penolakan</text>
+  <text x="905" y="370" text-anchor="middle" font-size="11" fill="#7f1d1d">direct — tujuan dead-letter</text>
+  <rect x="1070" y="330" width="230" height="60" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1185" y="353" text-anchor="middle" font-size="13" font-weight="600" fill="#7f1d1d">Queue: files.penolakan.q</text>
+  <text x="1185" y="370" text-anchor="middle" font-size="11" fill="#7f1d1d">+ tabel file_rejections (audit)</text>
+  <path d="M905,190 V330" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,4" fill="none" marker-end="url(#arrowRed)"/>
+  <path d="M1000,360 H1070" stroke="#dc2626" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="960" y="270" font-size="11" fill="#7f1d1d">payload gagal validasi -&gt;</text>
+  <text x="960" y="285" font-size="11" fill="#7f1d1d">nack(requeue:false) -&gt; DLX</text>
+
+  <!-- Legend / rules box -->
+  <rect x="30" y="450" width="1340" height="300" rx="10" fill="#f9fafb" stroke="#d1d5db" stroke-width="1.5"/>
+  <text x="55" y="480" font-size="15" font-weight="700" fill="#111827">Aturan kunci</text>
+  <text x="55" y="510" font-size="13" fill="#1f2937">1. Kontrak event: { event_id, event_type: "file.processing.requested", occurred_at, payload: { job_id, file_id, operation } }. event_id = kunci dedup, job_id = label bisnis job.</text>
+  <text x="55" y="536" font-size="13" fill="#1f2937">2. Idempotensi: event_id = PRIMARY KEY tabel file_results. INSERT ... ON CONFLICT (event_id) DO NOTHING RETURNING event_id dalam SATU statement atomik.</text>
+  <text x="55" y="562" font-size="13" fill="#1f2937">3. file_id HANYA dipakai sebagai kunci lookup ke fixtures/ lokal (src/berkas.js) -- file_id tak terdaftar ditolak, tak ada path/URL bebas dari pesan yang pernah dibaca worker.</text>
+  <text x="55" y="588" font-size="13" fill="#1f2937">4. Ack HANYA setelah efek bisnis (ukuran_bytes + jumlah_kata) tersimpan di PostgreSQL. Payload tidak valid: dicatat ke file_rejections, lalu nack(requeue:false) -&gt; DLX files.penolakan.q.</text>
+  <text x="55" y="614" font-size="13" fill="#1f2937">5. Publisher confirm SAJA tidak membuktikan pesan sampai queue tujuan -&gt; alternate-exchange (files.tanpa_rute) menangkap pesan yang gagal cocok binding apa pun.</text>
+  <text x="55" y="640" font-size="13" fill="#1f2937">6. Kegagalan tak terduga (mis. DB mati): TIDAK ack, TIDAK nack -&gt; pesan tetap unacked, dikirim ulang ke consumer berikutnya begitu koneksi lama ditutup.</text>
+  <text x="55" y="676" font-size="15" font-weight="700" fill="#111827">Hasil pengujian run01 (23 Sep 2026)</text>
+  <text x="55" y="702" font-size="13" fill="#1f2937">U1: 20 event valid -&gt; 20 hasil unik.  U2: worker mati, 5 job tertahan (ready=5, consumers=0) -&gt; pulih otomatis -&gt; 25 hasil.</text>
+  <text x="55" y="726" font-size="13" fill="#1f2937">U3: replay N01-N05 (event_id + payload semula) -&gt; tetap 25 hasil (0 efek baru).  U4: X01 (file_id tak terdaftar) ditolak, V01 selesai -&gt; 26 hasil, 1 penolakan.</text>
+  <text x="55" y="750" font-size="12" fill="#6b7280">Detail lengkap: README.md dan laporan/LAPORAN.md pada repo a04-w-pengolahan-berkas. Bukti mentah: bukti/run01-*.json dan bukti/run01-log-worker.txt.</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#374151"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#16a34a"/></marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#dc2626"/></marker>
+  </defs>
+</svg>

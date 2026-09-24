@@ -1,0 +1,3 @@
+RabbitMQ adalah message broker open source yang mendukung banyak protokol
+pesan termasuk AMQP MQTT dan STOMP untuk membangun sistem terdistribusi
+yang andal dan mudah diskalakan secara horizontal maupun vertikal
