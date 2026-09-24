@@ -1,4 +1,4 @@
-# A04-W — Pengolahan Berkas (Metadata Hasil Pengolahan)
+# Proyek Action Learning Studi Kasus A04-W — Pengolahan Berkas (Metadata Hasil Pengolahan)
 
 Proyek Action Learning Minggu Kedua, PJJ *Implementasi dan Pengelolaan Message
 Broker untuk Arsitektur Microservices* (BPPK Kemenkeu). Kasus **A04**, pola
@@ -6,8 +6,7 @@ Broker untuk Arsitektur Microservices* (BPPK Kemenkeu). Kasus **A04**, pola
 consumer.
 
 **Proyek ini berdiri sendiri** (RabbitMQ + PostgreSQL + Node.js miliknya
-sendiri, port dan kredensial terpisah) — tidak lagi bergantung pada repositori
-`simpel-lab`. Beberapa pola desainnya diadaptasi dari lab tersebut; lihat §7.
+sendiri, port dan kredensial terpisah) . Beberapa pola desainnya diadaptasi dari simle-lab; lihat §7.
 
 ## 0. Identitas & Kontribusi Tim
 
@@ -421,7 +420,3 @@ PDF/PNG bila format itu yang diminta pengajar.
 | Laporan ringkas (masalah & cakupan, alasan desain, hasil U1–U4, satu diagnosis gangguan, batas prototipe, kontribusi) | [`laporan/LAPORAN.md`](laporan/LAPORAN.md) |
 | Folder bukti (input, output persisten, perbandingan ID, log, observasi broker, per uji) | [`bukti/`](bukti/) |
 
-Seluruh isi tabel di atas ada dalam satu folder proyek ini
-(`a04-w-pengolahan-berkas/`) — cukup diarsipkan (mis. `.zip`) atau dibagikan
-lewat tautan repositori yang dapat diakses pengajar; repo publik tidak
-diwajibkan.
